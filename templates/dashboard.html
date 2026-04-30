@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h4 class="mb-4"><i class="fa-solid fa-graduation-cap me-2"></i>{{ main_college.name }}</h4>
+
+<!-- Виджеты -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card text-white h-100 shadow-sm" style="background-color:#1a237e;">
+            <div class="card-body d-flex align-items-center">
+                <div class="me-3"><i class="fa-solid fa-star fa-3x"></i></div>
+                <div>
+                    <h6 class="card-title mb-0">Средний рейтинг</h6>
+                    <h2 class="fw-bold mb-0">{{ avg_rating }} ★</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-success h-100 shadow-sm">
+            <div class="card-body d-flex align-items-center">
+                <div class="me-3"><i class="fa-solid fa-thumbs-up fa-3x"></i></div>
+                <div>
+                    <h6 class="card-title mb-0">Положительных</h6>
+                    <h2 class="fw-bold mb-0">{{ positive_count }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-danger h-100 shadow-sm">
+            <div class="card-body d-flex align-items-center">
+                <div class="me-3"><i class="fa-solid fa-thumbs-down fa-3x"></i></div>
+                <div>
+                    <h6 class="card-title mb-0">Отрицательных</h6>
+                    <h2 class="fw-bold mb-0">{{ negative_count }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-warning h-100 shadow-sm">
+            <div class="card-body d-flex align-items-center">
+                <div class="me-3"><i class="fa-solid fa-comments fa-3x"></i></div>
+                <div>
+                    <h6 class="card-title mb-0">Всего отзывов</h6>
+                    <h2 class="fw-bold mb-0">{{ total_reviews }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Line Chart — динамика отзывов -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="fa-solid fa-chart-line me-2"></i>Динамика отзывов по месяцам</h5>
+    </div>
+    <div class="card-body">
+        <canvas id="lineChart" height="80"></canvas>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <!-- Bar Chart — топ жалоб -->
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="fa-solid fa-triangle-exclamation me-2"></i>Топ жалоб в негативных отзывах</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="barChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <!-- Pie Chart — тональность -->
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="fa-solid fa-chart-pie me-2"></i>Тональность отзывов</h5>
+            </div>
+            <div class="card-body d-flex justify-content-center">
+                <canvas id="pieChart" style="max-width:300px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bar Chart — распределение по оценкам -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="fa-solid fa-chart-column me-2"></i>Распределение по оценкам</h5>
+    </div>
+    <div class="card-body">
+        <canvas id="ratingChart" height="80"></canvas>
+    </div>
+</div>
+
+<!-- Рекомендации -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="fa-solid fa-lightbulb me-2"></i>Рекомендации по улучшению</h5>
+    </div>
+    <div class="card-body">
+        {% for rec in recommendations %}
+        <div class="alert alert-light border mb-2">{{ rec }}</div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+    new Chart(document.getElementById('lineChart'), {
+        type: 'line',
+        data: {
+            labels: {{ line_labels|safe }},
+            datasets: [{
+                label: 'Количество отзывов',
+                data: {{ line_data|safe }},
+                borderColor: '#1a237e',
+                backgroundColor: 'rgba(26,35,126,0.1)',
+                borderWidth: 2, fill: true, tension: 0.4
+            }]
+        }
+    });
+
+    new Chart(document.getElementById('barChart'), {
+        type: 'bar',
+        data: {
+            labels: {{ bar_labels|safe }},
+            datasets: [{
+                label: 'Количество упоминаний',
+                data: {{ bar_data|safe }},
+                backgroundColor: '#dc3545',
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            scales: { x: { beginAtZero: true } }
+        }
+    });
+
+    new Chart(document.getElementById('pieChart'), {
+        type: 'pie',
+        data: {
+            labels: ['Положительные', 'Нейтральные', 'Отрицательные'],
+            datasets: [{
+                data: {{ pie_data|safe }},
+                backgroundColor: ['#198754', '#ffc107', '#dc3545'],
+            }]
+        },
+        options: { plugins: { legend: { position: 'bottom' } } }
+    });
+
+    new Chart(document.getElementById('ratingChart'), {
+        type: 'bar',
+        data: {
+            labels: ['1 ★', '2 ★', '3 ★', '4 ★', '5 ★'],
+            datasets: [{
+                label: 'Количество отзывов',
+                data: {{ rating_data|safe }},
+                backgroundColor: ['#dc3545','#fd7e14','#ffc107','#20c997','#198754'],
+            }]
+        }
+    });
+
+});
+</script>
+{% endblock %}
